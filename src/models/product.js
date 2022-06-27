@@ -23,7 +23,7 @@ class Product {
             this.fPrice,
             this.fStoreId
         ];
-    };
+    }
 
     static save(product, trx = null){
         return new Promise((resolve, reject) => {

@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "set NODE_ENV=test jest",
-    "dev": "set NODE_ENV=development&&nodemon index.js",
-    "start": "set NODE_ENV=production index.js"
+    "test": "NODE_ENV=test jest",
+    "dev": "NODE_ENV=development nodemon index.js",
+    "start": "NODE_ENV=production index.js"
   },
   "author": "",
   "license": "ISC",
