@@ -1,15 +1,13 @@
-const express = require('express');
-//const productrt = require('./controllers/product/router');
-const storert = require('./controllers/store/router');
+const path = require('path');
+const env = process.env.NODE_ENV;
 
+//IN PROUCTION VARS ARE IN THE SYSTEM
+if(env){
+    require('dotenv').config({path: path.join(__dirname, '.' + env + '.env')})
+}
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded());
+const app = require('./src/app');
 
-
-app.use("/store", storert);
-
-app.listen(9091, ()=> {
-    console.log("app running");
+app.listen(process.env.PORT, () => {
+    console.log(`SERVER RUNNING ON PORT ${process.env.PORT}`);
 });

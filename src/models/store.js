@@ -1,188 +1,167 @@
-const express = require('express');
-const db = require('../utils/dbconnection');
+const knex = require('../common/db');
+const { Product } = require('./product');
 
 class Store {
 
-    constructor (id, name, address){
+    static tableName = "stores";
+    static fId = "id";
+    static fName = "name";
+    static fAddress = "address";
+    static fOwner = "owner";
+
+    constructor (id = null, name = null, address = null, ownerId){
         this.id = id;
         this.name = name;
         this.address = address;
+        this.owner = ownerId;
     }
 
-    get name(){
-        return this.name;
-    }
-
-    set name(newName) {
-        this.name = newName;
-    }
-
-    get address(){
-        return this.address;
-    }
-
-    set address(newAddress){
-        this.address = newAddress
-    }
-
-    get id(){
-        return this.id;
-    }
-
-    set id(newId){
-        this.id = newId;
-    }
-}
-
-function createStore(storeName, address){
-    
-    return new Promise( (resolve, reject) => {
-        const conn = db.getConnection();
-        let query = `INSERT INTO Stores (name, address) VALUES ( "${storeName}", "${address}")`;
-
-        conn.query(query, (error, rows, fields) => {
-            if(error){
+    static save(store, trx = null){
+        return new Promise( (resolve, reject) => {
+            (trx ? trx(this.tableName) : knex(this.tableName))
+                .insert({...store})
+            .then(results => {
+                if(results.length > 0){
+                    store.id = results[0];
+                    resolve(store);
+                }
+                else{
+                    resolve(null);
+                }
+            })
+            .catch(error => {
                 reject(error);
-            }
-            else{
-                resolve({rows, fields});
-            }
+            });
+        });
+    }
+
+    static deleteById(storeId, deleteAsociated=true, trx=null){
+
+        if(!Array.isArray(storeId)){
+            storeId = [ storeId ];          
+        }
+        return new Promise ( (resolve, reject) => {
+
+            (() => {
+                if(deleteAsociated) return Product.deleteByStoreId(storeId, trx);
+                else return new Promise((resolve) => {resolve(false)});
+            })()
+            .then(resultP => {
+                return (trx ? trx(this.tableName) : knex(this.tableName))
+                    .delete()
+                    .whereIn('id', storeId)
+            })
+            .then(result => {
+                resolve(result);
+            })
+            .catch(error => {
+                console.log("🚀 ~ file: store.js ~ line 60 ~ Store ~ returnnewPromise ~ error", error);
+                reject(error);
+            });
             
         });
-    });
-}
+    }
 
-function removeStore(storeId){
-    return new Promise ( (resolve, reject) => {
-        console.log(storeId);
-        const conn = db.getConnection();
-        let query = `DELETE FROM Stores WHERE id = ${storeId};`;
-        conn.query(query, (err, data) => {
-            if(err){
-                reject(err);
-            }
-            else{
-                if(data.affectedRows === 0){
-                    reject("No data");
-                }
-                else{
-                    resolve(data);
-                }
-            }
-        });
-    });
-}
-
-function getStore(storeId){
-
-    return new Promise ( (resolve, reject) => {
-        const conn = db.getConnection();
-        let query = `SELECT id, name, address FROM Stores WHERE id = ${storeId}`;
-        conn.query(query, (err, rows, fields) => {
-            if(err){
-                reject(err);
-            }
-            else{
-                if(rows.length === 0){
-                    reject("empty set");
-                }
-                else{
-                    const stores = rows.reduce( (prev, current) => {
-                        prev.push(new Store(current.id, current.name, current.address));
-                        // prev.push({
-                        //     id: current.id,
-                        //     name: current.name,
-                        //     address: current.address
-                        // });
-                        return prev;
-                    }, []);
-                    resolve(stores[0]);
-                }
-
-            }
-        });
-    });
-}
-
-function getStoreWithProducts(storeID){
-    return new Promise( (resolve, reject) => {
-        const conn = db.getConnection();
-        let query = 
-        `SELECT \
-            S.id, S.name, S.addess, J.pruductID, P.name, J.quantity \
-        FROM \
-            Stores AS S \
-        LEFT JOIN \
-            StoreProduct AS J ON J.storeID = Store.id \
-        LEFT JOIN \
-            Products AS P ON J.productID = P.id` ;
-    });
-}
-
-function getAllStores(){
-    return new Promise ( (resolve, reject) => {
-        const conn = db.getConnection();
-        let query = `SELECT id, name, address FROM Stores;`;
-        conn.query(query, (err, rows, fields) => {
-            if(err){
-                reject(err);
-            }
-            else{
-                if(rows.length === 0){
-                    reject("empty set");
-                }
-                else{
-                    const stores = rows.reduce( (prev, current) => {
-                        prev.push({
-                            id: current.id,
-                            name: current.name,
-                            address: current.address
-                        });
-                        return prev;
-                    }, []);
-                    resolve(stores);
-                }
-
-            }
-        });
-    });
-}
-
-function updateStore(storeID, name, address){
-    return new Promise( (resolve, reject) => {
-        const conn = db.getConnection();
-        let query = `UPDATE Stores SET `;
-        let unfinish = false;
-        if(name){
-            query += `name = "${name}", `;
+    static getBy(field, values, trx=null){
+        if(!Array.isArray(values)){
+            values = [ parseInt(values) ];  
         }
-        if(address){
-            query += `address = ${address}`
-        }
-        else{
-            query = query.substring(0, query.length - 3);
-        }
-
-        query += ` WHERE id = ${storeID};`;
-        
-        conn.query(query, (error, data) => {
-            if(error){
+        return new Promise ( (resolve, reject) => {
+            (trx ? trx(this.tableName) : knex(this.tableName))
+                .select(this.fId, this.fName, this.fAddress, this.fOwner)
+                .whereIn(field, values)
+            .then(rows => {
+                const stores = rows.map(row => new Store(row.id, row.name, row.address, row.owner));
+                resolve(stores);
+            })
+            .catch(error => {
                 reject(error);
-            }
-            else{
-                resolve(data);
-            }
+            });
         });
-    });
-}
+    }
 
+    static deleteByOwner(owner, deleteAsociated=true, trx=null){
+        return new Promise((resolve, reject) => {
+            (() => {
+                if(deleteAsociated){
+                    return this.getBy(this.fOwner, owner)
+                        .then(stores => {
+                            const storeIds = stores.map(store => store.id);
+                            return Product.deleteByStoreId(storeIds, trx)
+                        });
+                } 
+                else return new Promise((resolve) => resolve(true));
+            })()
+            .then(respP => {
+                return (trx ? trx(this.tableName) : knex(this.tableName))
+                    .delete()
+                    .where({ owner })
+            })
+            .then(result => {
+                resolve(result);
+            })
+            .catch(error => {
+                reject(error);
+            });
+        });
+    }
+
+    static getByOwner(owner){
+        return new Promise((resolve, reject) => {
+            knex(this.tableName)
+                .select(this.fId, this.fName, this.fAddress, this.fOwner)
+                .where({owner})
+            .then(rows => {
+                const stores = rows.map(row => {
+                    return new Store(row.id, row.name, row.address, row.owner);
+                });
+                resolve(stores);
+            })
+            .catch(error => {
+                reject(error);
+            });
+        });
+    }
+    
+    static getById(storeId, trx = null){
+        return new Promise ( (resolve, reject) => {
+            knex(this.tableName)
+                .select(this.fId, this.fName, this.fAddress, this.fOwner)
+                .where({id: storeId})
+            .then(rows => {
+                if(rows.length > 0){
+                    resolve(new Store(rows[0].id, rows[0].name, rows[0].address, rows[0].owner));
+                }
+                else{
+                    resolve(null);
+                }
+            })
+            .catch(error => {
+                reject(error);
+            });
+        });
+    }
+
+    static update(store){
+        return new Promise( (resolve, reject) => {
+            let upd ={
+                name: store.name,
+                address: store.address
+            }
+            knex(this.tableName)
+                .update(upd)
+                .where({id: store.id})
+            .then(result => {
+                resolve(result);
+            })
+            .catch(error => {
+                reject(error);
+            });
+        });
+    }
+    
+}
 
 module.exports = {
-    Store,
-    createStore,
-    removeStore,
-    getStore,
-    getAllStores,
-    updateStore,
-    getStoreWithProducts
+    Store
 }

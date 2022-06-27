@@ -1,14 +1,15 @@
 const express = require('express');
 const service = require('./service');
+const authMidl = require('../../middleware/authenticated');
 
 const router = express.Router();
+router.use(authMidl.checkAuth);
 
-router.get("/:id", service.getStore);
-//router.get("/:id/products", service.getStoreProducts);
-router.post("/", service.createNewStore);
-router.delete("/:id", service.deleteStore);
-router.patch("/:id", service.updateStore);
-//router.patch("/:id/products", service.supplyProduct);
+router.post('/', service.createStore);
+router.get('/:id', service.getStore); //belongs to middleware
+router.get('/', service.getStores);
+router.put('/:id', service.updateStore); 
+router.delete('/:id', service.deleteStore);
 
 
 module.exports = router;

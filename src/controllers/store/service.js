@@ -1,97 +1,106 @@
-const store = require('../../models/store');
+//const store = require('../../models/store');
 
+const { Product } = require("../../models/product");
+const { Store } = require("../../models/store");
+const knex = require('../../common/db');
 
 const getStore = (req, res) => {
     const storeID = req.params.id
-    if(storeID){
-        store.getStore(storeID)
-        .then(store => {
-            res.status(200).json(store);
-        })
-        .catch(error => {
-            res.status(404).json(error);
-        });
-    }
-    else{
-        store.getAllStores()
-        .then(stores => {
-            res.status(200).json(stores);
-        })
-        .catch(error => {
-            res.status(404).json(error);
-        });
-    }
+    
+    Store.getById(storeID)
+    .then(str => {
+        if(str)
+            res.status(200).json(str);
+        else
+            res.status(404).end();
+    })
+    .catch(error => {
+        res.status(404).json(error);
+    });
 }
 
-const createNewStore = (req, res) => {
-    const {storeName, address} = req.body;
-    console.log(storeName, address);
-    
-    store.createStore(storeName, address)
-    .then(result => {
-        res.status(201).json({
-            message: "Created"
-        });
+const getStores = (req, res) => {
+    const owner = req.user.id;
+
+    Store.getByOwner(owner)
+    .then(stores => {
+        res.status(200).json(stores);
     })
-    .catch( error => {
-        res.status(500).json({
-            message: "Thre was a problem"
-        });
+    .catch(error => {   
+        res.status(500).json(error);
+    });
+}
+
+const createStore = (req, res) => {
+
+    let store = new Store(null, req.body.name, req.body.address, req.user.id);
+
+    Store.save(store)
+    .then(samestore => {
+        res.status(200).json(samestore);
+    })
+    .catch(error => {
+        console.log(error);
+        res.status(500).end();
     });
 }
 
 const deleteStore = (req, res) => {
     const id = req.params.id;
-    if(!id){
-        res.status(400).end();
-    }
-    else{
-        store.removeStore(id)
-        .then( result => {
-            res.status(200).json(result);
-        })
-        .catch(error => {
-            res.status(500).json(error);
-        });
-    }
-};
-
-
+    Store.getById(id)
+    .then(store => {
+        if(store){
+            knex.transaction(t => {
+                Store.deleteById(id, true, t)
+                .then(result => {
+                    t.commit();
+                    res.status(200).json(store);
+                })
+                .catch(error => {
+                    t.rollback();
+                    res.status(500).json(error);
+                });
+            })
+            .catch(error => {
+                res.status(500).end();
+            });
+        }
+        else{
+            res.status(404).end();
+        }
+    })
+    .catch(error => {
+        res.status(500).json(error);
+    });
+}
 
 const updateStore = (req, res) => {
     const id = req.params.id;
-    if(!id){
-        res.status(400).end();
-    }
-    else{
-        store.updateStore(id, req.body.name, req.body.address)
-        .then(data => {
-            res.status(204).end();
-        })
-        .catch(error => {
-            res.status(500).end();
-        });
-    }
+    
+    Store.getById(id)
+    .then(store => {
+        if(store){
+            if(req.body.name) store.name = req.body.name;
+            if(req.body.address) store.address = req.body.address;
+            Store.update(store)
+            .then(result => {
+                res.status(200).json(store);
+            })
+            .catch(error => {
+                res.status(500).json(error);
+            });
+        }
+    })
+    .catch(error => {
+        res.status(500).end();
+    });
 }
 
-const getStoreProducts = (req, res) => {
-    const id = req.params.id;
-    if(!id){
-        res.status(400).end();
-    }
-    else{
-        
-    }
-}
 
-const supplyProduct = (req, res) => {
-    const id = req.params.id;
-    if(!id){
-        res.status(400).end();
-    }
-    else{
-        
-    }
-}
-
-module.exports = {createNewStore, getStore, deleteStore, updateStore};
+module.exports = {
+    createStore,
+    getStore,
+    getStores,
+    updateStore,
+    deleteStore
+};

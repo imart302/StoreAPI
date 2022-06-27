@@ -4,7 +4,7 @@ class DBConnection {
     static connection;
 
     constructor(){
-
+        
     }
 
     static getConnection(){
