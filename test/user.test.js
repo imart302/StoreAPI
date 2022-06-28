@@ -30,7 +30,7 @@ afterAll( async () => {
 
 describe("GET USERS", () => {
     it('get user', async () => {
-        const [ id ] = await knex.insert(userObj).into('users')
+        const [ id ] = await knex.insert(userObj).into('users');
         console.log("🚀 ~ file: user.test.js ~ line 52 ~ it ~ result", id)
         
 
@@ -38,6 +38,7 @@ describe("GET USERS", () => {
             .get(`/user/${id}`);
         expect(response.body.email).toEqual(userObj.email);
     });
+
 });
 
 
@@ -53,4 +54,27 @@ describe('POST USERS', () => {
         
         expect(user.email).toEqual('juan@email.com');
     });
+
+    it('check fields', async () => {
+        let {email, ... remain} = userObj;
+        const response = await request('http://localhost:8085')
+            .post('/user')
+            .send(remain);
+        
+        expect(response.status).toEqual(400);
+    });
+
+    it('should not repeat email', async () => {
+        const [ id ] = await knex.insert(userObj).into('users');
+        
+        const response = await request('http://localhost:8085')
+            .post('/user')
+            .send(userObj);
+        
+        expect(response.status).toEqual(400);
+    });
+});
+
+describe('PUT USER', () => {
+
 });
