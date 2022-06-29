@@ -29,7 +29,18 @@ const getProduct = (req, res) => {
     Product.getById(id)
     .then(product => {
         if(product){
-            res.status(200).json(product);
+            Store.getById(product.storeId)
+            .then(store => {
+                if(store.owner == req.user.id){
+                    res.status(200).json(product);
+                }
+                else{
+                    res.status(403).json({message: "Not allowed resource"});
+                }
+            })
+            .catch(error => {
+                res.status(404).end();
+            });
         }
         else{
             res.status(404).end();
@@ -61,13 +72,24 @@ const updateProduct = (req, res) => {
     Product.getById(id)
     .then(product => {
         if(product){
-            if(req.body.name) product.name = req.body.name;
-            if(req.body.price) product.price = req.body.price;
-            if(req.body.storeId) product.storeId = req.body.storeId;
+            Store.getById(product.storeId)
+            .then(store => {
+                if(store.owner == req.user.id){
+                    if(req.body.name) product.name = req.body.name;
+                    if(req.body.price) product.price = req.body.price;
+                    if(req.body.storeId) product.storeId = req.body.storeId;
 
-            Product.update(product)
-            .then(result => {
-                res.status(200).json(product);
+                    Product.update(product)
+                    .then(result => {
+                        res.status(200).json(product);
+                    })
+                    .catch(error => {
+                        res.status(500).end();
+                    });
+                }
+                else{
+                    res.status(403).json({message: "Not allowed resource"});
+                }
             })
             .catch(error => {
                 res.status(500).end();
@@ -88,13 +110,24 @@ const deleteProduct = (req, res) => {
     Product.getById(id)
     .then(product => {
         if(product){
-            Product.deleteById(id)
-            .then(result => {
-                res.status(200).json(product);
+            Store.getById(product.storeId)
+            .then(store => {
+                if(store.owner == req.user.id){
+                    Product.deleteById(id)
+                    .then(result => {
+                        res.status(200).json(product);
+                    })
+                    .catch(error => {
+                        res.status(500).end();
+                    });
+                }
+                else{
+                    res.status(403).json({message: "Not allowed resource"});
+                }
             })
             .catch(error => {
                 res.status(500).end();
-            })
+            });
         }
         else{
             res.status(404).end();

@@ -35,6 +35,16 @@ function getUser(req, res){
     });
 }
 
+function getAllUsers(req, res){
+    User.getAll()
+    .then(users => {
+        res.status(200).json(users);
+    })
+    .catch(error => {
+        res.status(500).end();
+    });
+}
+
 function updateUser(req, res){
     const { id } = req.params;
     
@@ -94,5 +104,6 @@ module.exports ={
     createUser,
     getUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    getAllUsers
 }

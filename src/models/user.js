@@ -17,6 +17,16 @@ class User {
         this.password = password
     }
 
+    static getFields(){
+        return [
+            this.fId,
+            this.fName,
+            this.fEmail,
+            this.fPassword,
+            this.fRole
+        ]
+    }
+
     static save(user){
         return new Promise((resolve, reject) => {
             knex
@@ -56,23 +66,20 @@ class User {
         });
     }
 
-    // static getAll(){
-    //     return new Promise((resolve, reject) => {
-    //         let conn = DBConnection.getConnection();
-    //         let query = `SELECT id, name, email, role FROM ${this.tableName}`;
-    //         conn.query(query, [id], (error, rows) => {
-    //             if(error){
-    //                 reject(error);
-    //             }
-    //             else{
-    //                 const users = rows.reduce((prev, current) => {
-    //                     prev.push(new User(current.id, current.name, current.email, current.role));
-    //                 }, []);
-    //                 resolve(users);
-    //             }
-    //         });
-    //     });
-    // }
+
+    static getAll(trx = null){
+        return new Promise((resolve, reject) => {
+            (trx ? trx(this.tableName) : knex(this.tableName))
+                .select(... this.getFields())
+            .then(rows => {
+                const users = rows.map(row => new User(row.id, row.name, row.email, row.role, row.password));
+                resolve(users);
+            })
+            .catch(error => {
+                reject(error);
+            });
+        });
+    }
 
     static getByEmail(email){
         return new Promise((resolve, reject) => {
@@ -130,6 +137,21 @@ class User {
             .catch(error => {
                 reject(error);
             })
+        });
+    }
+
+    static getBy(field, value, trx = null){
+        return new Promise((resolve, reject) => {
+            (trx ? trx(this.tableName) : knex(this.tableName))
+                .select(... this.getFields())
+                .whereIn(field, value)
+            .then(rows => {
+                const users = rows.map (row => new User(row.id, row.name, row.email, row.role, row.password) )
+                resolve(users);
+            })
+            .catch(error => {
+                reject(error);
+            });
         });
     }
 }

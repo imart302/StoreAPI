@@ -1,4 +1,6 @@
 const knex = require('../common/db');
+const { Store } = require('./store');
+const User = require('./user');
 
 
 class Product {
@@ -40,14 +42,32 @@ class Product {
     }
 
     static getByStoreId(storeId, trx = null){
+        if(!Array.isArray(storeId)) storeId = [storeId];
+
         return new Promise((resolve, reject) => {
             (trx ? trx(this.tableName) : knex(this.tableName)) 
                 .select(this.fId, this.fName, this.fPrice, this.fStoreId)
-                .where({storeId})
+                .whereIn(this.fStoreId, storeId)
             .then(rows => {
                 const products = rows.map( row => {
                     return new Product(row.id, row.name, row.price, row.storeId);
                 });
+                resolve(products);
+            })
+            .catch(error => {
+                reject(error);
+            });
+        });
+    }
+
+    static getByOwner(owner, trx = null){
+        return new Promise((resolve, reject) => {
+            Store.getByOwner(owner)
+            .then(stores => {
+                const storeIds = stores.map(store => store.id);
+                return this.getByStoreId(storeIds, trx);
+            })
+            .then(products => {
                 resolve(products);
             })
             .catch(error => {

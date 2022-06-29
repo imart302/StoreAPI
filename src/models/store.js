@@ -106,9 +106,9 @@ class Store {
         });
     }
 
-    static getByOwner(owner){
+    static getByOwner(owner, trx = null){
         return new Promise((resolve, reject) => {
-            knex(this.tableName)
+            (trx ? trx(this.tableName) : knex(this.tableName))
                 .select(this.fId, this.fName, this.fAddress, this.fOwner)
                 .where({owner})
             .then(rows => {
@@ -125,7 +125,7 @@ class Store {
     
     static getById(storeId, trx = null){
         return new Promise ( (resolve, reject) => {
-            knex(this.tableName)
+            (trx ? trx(this.tableName) : knex(this.tableName))
                 .select(this.fId, this.fName, this.fAddress, this.fOwner)
                 .where({id: storeId})
             .then(rows => {
@@ -142,13 +142,13 @@ class Store {
         });
     }
 
-    static update(store){
+    static update(store, trx = null){
         return new Promise( (resolve, reject) => {
             let upd ={
                 name: store.name,
                 address: store.address
             }
-            knex(this.tableName)
+            (trx ? trx(this.tableName) : knex(this.tableName))
                 .update(upd)
                 .where({id: store.id})
             .then(result => {
@@ -159,7 +159,6 @@ class Store {
             });
         });
     }
-    
 }
 
 module.exports = {

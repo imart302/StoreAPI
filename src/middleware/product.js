@@ -1,4 +1,5 @@
 const joi = require('joi');
+const { Product } = require('../models/product');
 const { Store } = require('../models/store');
 
 const newProductBody = joi.object({
@@ -82,6 +83,20 @@ function storeBelongsToParam(req, res, next){
     });
 }
 
+
+function productBelongsTo(req, res, next){
+    Product.getByOwner(req.user.id)
+    .then(products => {
+        const productsIds = products.map(product => product.id);
+        const check = productsIds.includes(parseInt(req.params.id))
+        if(check){
+            
+        }
+    })
+    .catch(error => {
+
+    });
+}
 
 
 module.exports = {
