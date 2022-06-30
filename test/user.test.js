@@ -2,16 +2,19 @@ const knex = require('../src/common/db');
 const app = require('../src/app');
 const userObj = {name: "Juan", email: "juan@email.com", password: "pass", role: "admin"};
 
-const request = require('supertest');;
+const request = require('supertest');
+jest.useRealTimers();
 let server;
 
 beforeAll( async () => {
+    
     try{
         await knex.migrate.latest();
+        console.log(await knex.migrate.list());
         server = app.listen(8085);
     }
     catch(error){
-        console.log(error);
+        console.log("🚀 ~ file: user.test.js ~ line 17 ~ beforeAll ~ error", error)
     }
 });
 
@@ -76,5 +79,34 @@ describe('POST USERS', () => {
 });
 
 describe('PUT USER', () => {
+    it('change name', async () => {
+        const [ id ] = await knex.insert(userObj).into('users');
 
+        const response = await request('http://localhost:8085')
+            .put(`/user/${id}`)
+            .send({name: "Juan Peres"});
+
+        const response2 = await request('http://localhost:8085')
+            .get(`/user/${id}`);
+
+        expect(response2.body.name).toEqual("Juan Peres");
+    });
+});
+
+
+describe('DELETE USER', () => {
+    it('should remove user', async () => {
+
+        const [ id ] = await knex.insert(userObj).into('users');
+
+        const response = await request('http://localhost:8085')
+            .delete(`/user/${id}`);
+
+        expect(response.status).toEqual(200);
+
+        const response2 = await request('http://localhost:8085')
+            .get(`/user/${id}`);
+
+        expect(response2.status).toEqual(404);
+    });
 });

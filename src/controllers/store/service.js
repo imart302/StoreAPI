@@ -51,17 +51,17 @@ const deleteStore = (req, res) => {
     .then(store => {
         if(store){
             knex.transaction(t => {
-                Store.deleteById(id, true, t)
-                .then(result => {
-                    t.commit();
-                    res.status(200).json(store);
-                })
-                .catch(error => {
-                    t.rollback();
-                    res.status(500).json(error);
+                return Product.deleteByStoreId(id, t)
+                .then( pdels => {
+                    return Store.deleteById(id, t)
                 });
             })
+            .then(result => {
+                console.log("🚀 ~ file: service.js ~ line 60 ~ deleteStore ~ result", result)
+                res.status(200).json(store);
+            })
             .catch(error => {
+                console.log("🚀 ~ file: service.js ~ line 63 ~ deleteStore ~ error", error)
                 res.status(500).end();
             });
         }
@@ -84,6 +84,7 @@ const updateStore = (req, res) => {
             if(req.body.address) store.address = req.body.address;
             Store.update(store)
             .then(result => {
+                console.log("🚀 ~ file: service.js ~ line 87 ~ updateStore ~ result", result)
                 res.status(200).json(store);
             })
             .catch(error => {

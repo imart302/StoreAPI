@@ -1,6 +1,8 @@
 const User = require('../../models/user');
 const bcrypt = require('bcrypt');
 const knex = require('../../common/db');
+const { Store } = require('../../models/store');
+const { Product } = require('../../models/product');
 
 function createUser(req, res){
     const user = new User(null, req.body.name, req.body.email, req.body.role, null);
@@ -19,10 +21,12 @@ function createUser(req, res){
 
 function getUser(req, res){
     const { id } = req.params;
+    console.log("🚀 ~ file: services.js ~ line 22 ~ getUser ~ id", id)
 
     User.getById(id)
     .then(user => {
         if(user){
+            console.log("🚀 ~ file: services.js ~ line 27 ~ getUser ~ user", user)
             res.status(200).json(user);
         }
         else{
@@ -78,20 +82,35 @@ function deleteUser(req, res){
     User.getById(id)
     .then(user => {
         if(!user){
-            res.status(404).end();
+            return res.status(404).end();
         }
         else{
             knex.transaction(trx => {
-                User.deleteById(id, true, trx)
-                .then(result => {
-                    trx.commit();
-                    console.log(result);
-                    res.status(200).json(user);
+                return Store.getByOwner(id)
+                .then(stores => {
+                    const storeIds = stores.map(store => store.id);
+                    user.stores = storeIds;
+                    return Product.deleteByStoreId(storeIds, trx);
                 })
-                .catch(error => {
-                    trx.rollback();
-                    res.status(500).json(error);
+                .then(pdel => {
+                    console.log("🚀 ~ file: services.js ~ line 96 ~ deleteUser ~ pdel", pdel)
+                    return Store.deleteById(user.stores, trx);
+                })
+                .then(sdel => {
+                    console.log("🚀 ~ file: services.js ~ line 100 ~ deleteUser ~ sdel", sdel)
+                    return User.deleteById(id, trx)
+                })
+                .then(result => {
+                    return result;
                 });
+            })
+            .then(res2 => {
+                console.log(res2);
+                res.status(200).json(res2);
+            })
+            .catch(error => {
+                console.log("🚀 ~ file: services.js ~ line 112 ~ deleteUser ~ error", error)
+                res.status(500).end();
             });
         }
     })

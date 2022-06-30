@@ -1,7 +1,4 @@
 const knex = require('../common/db');
-const { Store } = require('./store');
-const User = require('./user');
-
 
 class Product {
     
@@ -60,21 +57,21 @@ class Product {
         });
     }
 
-    static getByOwner(owner, trx = null){
-        return new Promise((resolve, reject) => {
-            Store.getByOwner(owner)
-            .then(stores => {
-                const storeIds = stores.map(store => store.id);
-                return this.getByStoreId(storeIds, trx);
-            })
-            .then(products => {
-                resolve(products);
-            })
-            .catch(error => {
-                reject(error);
-            });
-        });
-    }
+    // static getByOwner(owner, trx = null){
+    //     return new Promise((resolve, reject) => {
+    //         Store.getByOwner(owner)
+    //         .then(stores => {
+    //             const storeIds = stores.map(store => store.id);
+    //             return this.getByStoreId(storeIds, trx);
+    //         })
+    //         .then(products => {
+    //             resolve(products);
+    //         })
+    //         .catch(error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
     static getById(id, trx = null){
         return new Promise((resolve, reject) => {
@@ -133,10 +130,13 @@ class Product {
     }
 
     static deleteById(id, trx=null){
+        if(!Array.isArray(id)){
+            id = [ id ];
+        };
         return new Promise((resolve, reject) => {
             (trx ? trx(this.tableName) : knex(this.tableName))
                 .delete()
-                .where({id})
+                .whereIn(this.fId, id)
             .then(result => {
                 resolve(result);
             })

@@ -27,9 +27,9 @@ class User {
         ]
     }
 
-    static save(user){
+    static save(user, trx = null){
         return new Promise((resolve, reject) => {
-            knex
+            (trx ? trx(this.tableName) : knex(this.tableName))
                 .insert({...user})
                 .into(this.tableName)
             .then(result => {
@@ -41,18 +41,16 @@ class User {
             .catch(error => {
                 reject(error);
             });
-            
         });
     }
 
     static getById(id){
         return new Promise((resolve, reject) => {
             knex
-                .select(this.fId, this.fName, this.fEmail, this.fRole, this.fPassword)
+                .select(... this.getFields())
                 .from(this.tableName)
                 .where(this.fId, id)
             .then(users => {
-                //console.log(users);
                 if(users.length > 0){
                     resolve(new User(users[0].id, users[0].name, users[0].email, users[0].role, users[0].password));
                 }
@@ -61,6 +59,7 @@ class User {
                 }
             })
             .catch(error => {
+                console.log("🚀 ~ file: user.js ~ line 64 ~ User ~ returnnewPromise ~ error", error)
                 reject(error);
             });
         });
@@ -84,7 +83,7 @@ class User {
     static getByEmail(email){
         return new Promise((resolve, reject) => {
             knex(this.tableName)
-                .select(this.fId, this.fName, this.fEmail, this.fRole, this.fPassword)
+                .select(... this.getFields())
                 .where({email})
             .then(rows => {
                 if(rows.length > 0){
@@ -100,23 +99,18 @@ class User {
         });
     }
 
-    static deleteById(id, deleteAsociated = true, trx = null){
+    static deleteById(id, trx = null){
         console.log('delete user model');
         return new Promise((resolve, reject) => {
-            (() => {
-                return deleteAsociated ? Store.deleteByOwner(id, true, trx) : new Promise((resolve) => resolve(true));
-            })()
-            .then(resultP => {
-                return (trx ? trx(this.tableName) : knex(this.tableName))
-                .where({ id })
-                .delete()
-            })
+            (trx ? trx(this.tableName) : knex(this.tableName))
+                    .where({ id })
+                    .delete()
             .then(result => {
                 resolve(result);
             })
             .catch(error => {
                 reject(error);
-            })
+            });
         });
     }
 

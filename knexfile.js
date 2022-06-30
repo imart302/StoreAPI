@@ -17,7 +17,8 @@ module.exports = {
       port: parseInt(process.env.DBPORT),
       database: process.env.DBNAME,
       user: process.env.DBUSER,
-      password: process.env.DBPASSWORD
+      password: process.env.DBPASSWORD,
+      connectTimeout: 50000
     },
     pool: {
       min: 2,
@@ -33,8 +34,15 @@ module.exports = {
 
   test: {
     client: 'sqlite3',
-    connection: ':memory:',
+    connection: {
+      filename: './test/StoreAPI'
+    },
     useNullAsDefault: true,
+    pool: { 
+      min: 1, 
+      max: 3, 
+      idleTimeoutMillis: 360000*1000 
+    },
     migrations: {
       directory: './db'
     },

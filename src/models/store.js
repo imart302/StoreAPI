@@ -1,5 +1,4 @@
 const knex = require('../common/db');
-const { Product } = require('./product');
 
 class Store {
 
@@ -35,27 +34,19 @@ class Store {
         });
     }
 
-    static deleteById(storeId, deleteAsociated=true, trx=null){
+    static deleteById(storeId, trx=null){
 
         if(!Array.isArray(storeId)){
             storeId = [ storeId ];          
         }
         return new Promise ( (resolve, reject) => {
-
-            (() => {
-                if(deleteAsociated) return Product.deleteByStoreId(storeId, trx);
-                else return new Promise((resolve) => {resolve(false)});
-            })()
-            .then(resultP => {
-                return (trx ? trx(this.tableName) : knex(this.tableName))
-                    .delete()
-                    .whereIn('id', storeId)
-            })
+            (trx ? trx(this.tableName) : knex(this.tableName))
+                .delete()
+                .whereIn(this.fId, storeId)
             .then(result => {
                 resolve(result);
             })
             .catch(error => {
-                console.log("🚀 ~ file: store.js ~ line 60 ~ Store ~ returnnewPromise ~ error", error);
                 reject(error);
             });
             
@@ -80,23 +71,11 @@ class Store {
         });
     }
 
-    static deleteByOwner(owner, deleteAsociated=true, trx=null){
+    static deleteByOwner(owner, trx=null){
         return new Promise((resolve, reject) => {
-            (() => {
-                if(deleteAsociated){
-                    return this.getBy(this.fOwner, owner)
-                        .then(stores => {
-                            const storeIds = stores.map(store => store.id);
-                            return Product.deleteByStoreId(storeIds, trx)
-                        });
-                } 
-                else return new Promise((resolve) => resolve(true));
-            })()
-            .then(respP => {
-                return (trx ? trx(this.tableName) : knex(this.tableName))
+            (trx ? trx(this.tableName) : knex(this.tableName))
                     .delete()
                     .where({ owner })
-            })
             .then(result => {
                 resolve(result);
             })
