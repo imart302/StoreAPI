@@ -1,6 +1,8 @@
 const knex = require('../src/common/db');
 const app = require('../src/app');
 const userObj = {name: "Juan", email: "juan@email.com", password: "pass", role: "admin"};
+const userObj2 = {name: "Raul", email: "raul@email.com", password: "pass", role: "admin"};
+
 
 const request = require('supertest');
 jest.useRealTimers();
@@ -24,6 +26,7 @@ afterEach( async () => {
 
 afterAll( async () => {
     try{
+        await knex.delete().from('users');
         server.close();
     }
     catch(error){
@@ -90,6 +93,17 @@ describe('PUT USER', () => {
             .get(`/user/${id}`);
 
         expect(response2.body.name).toEqual("Juan Peres");
+    });
+
+    it('it also check no repeat email', async () => {
+        const [ id ] = await knex.insert(userObj).into('users');
+        const [ id2 ] = await knex.insert(userObj2).into('users');
+
+        const response = await request('http://localhost:8085')
+            .put(`/user/${id}`)
+            .send({email: "raul@email.com"});
+
+        expect(response.status).toEqual(400);
     });
 });
 

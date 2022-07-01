@@ -29,7 +29,8 @@ module.exports = {
     },
     seeds: {
       directory: './db'
-    }
+    },
+    debug: true
   },
 
   test: {

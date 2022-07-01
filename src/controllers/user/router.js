@@ -8,7 +8,7 @@ router.post('/', [userMidd.checkNewUserFields, userMidd.existingEmail], createUs
 //router.post('/admin', [userMidd.checkNewUserFields, userMidd.existingEmail], createUser); //admin user create user with roles 
 router.get('/:id', getUser);
 router.get('/', getAllUsers)
-router.put('/:id', [userMidd.checkUpdateUserFields], updateUser);
+router.put('/:id', [userMidd.checkUpdateUserFields, userMidd.existingEmailUpdate], updateUser);
 router.delete('/:id', deleteUser);
 
 module.exports = router;

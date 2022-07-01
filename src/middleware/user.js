@@ -50,8 +50,29 @@ function existingEmail(req, res, next){
     });
 }
 
+function existingEmailUpdate(req, res, next){
+    if(req.body.email){
+        User.getByEmail(req.body.email)
+        .then(user => {
+            if(user){
+                return res.status(400).json({message: 'email already in use'});
+            }
+            else{
+                next()
+            }
+        })
+        .catch(error => {
+            return res.status(500).end();
+        });
+    }
+    else{
+        next();
+    }
+}
+
 module.exports = {
     checkNewUserFields,
     existingEmail,
-    checkUpdateUserFields
+    checkUpdateUserFields,
+    existingEmailUpdate
 }
