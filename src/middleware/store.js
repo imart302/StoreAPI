@@ -4,9 +4,12 @@ const { Store } = require("../models/store");
 function storeBelongsTo(req, res, next){
     const { id } = req.params;
 
+    console.log("🚀 ~ file: store.js ~ line 7 ~ storeBelongsTo ~ req.user", req.user)
+    
     Store.getById(id)
     .then(store => {
         if(store){
+            console.log("🚀 ~ file: store.js ~ line 12 ~ storeBelongsTo ~ store", store)
             if(store.owner == req.user.id){
                 next();
             }

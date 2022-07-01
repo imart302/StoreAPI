@@ -53,8 +53,10 @@ const getProduct = (req, res) => {
 
 const getAllProducts = (req, res) => {
     const owner = req.user.id;
-    Store.getBy(Store.fOwner, owner)
+
+    Store.getBy(Store.fOwner, [owner])
     .then(stores => {
+
         const storeIds = stores.map(store => store.id);
         return Product.getBy(Product.fStoreId, storeIds)
     })

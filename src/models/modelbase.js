@@ -21,8 +21,8 @@ class ModelBase {
             (trx ? trx(this.tableName) : knex(this.tableName))
             .insert({... instance})
             .then(result => {
-                product.id = result[0];
-                resolve(product);
+                instance.id = result[0];
+                resolve(instance);
             })
             .catch(error => {
                 reject(error);
@@ -79,6 +79,8 @@ class ModelBase {
     }
 
     static getBy(field, values, trx = null){
+        console.log("🚀 ~ file: modelbase.js ~ line 82 ~ ModelBase ~ getBy ~ values", values)
+        console.log("🚀 ~ file: modelbase.js ~ line 82 ~ ModelBase ~ getBy ~ field", field)
         return new Promise((resolve, reject) => {
             (trx ? trx(this.tableName) : knex(this.tableName))
                 .select(... this.getFields())
@@ -88,6 +90,7 @@ class ModelBase {
                 resolve(instances); 
             })
             .catch(error => {
+                console.log("🚀 ~ file: modelbase.js ~ line 93 ~ ModelBase ~ returnnewPromise ~ error", error)
                 reject(error);
             });
         });
