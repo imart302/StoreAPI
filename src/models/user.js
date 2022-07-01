@@ -33,22 +33,22 @@ class User extends ModelBase {
         return new User(params.id, params.name, params.email, params.role, params.password);
     }
 
-    static save(user, trx = null){
-        return new Promise((resolve, reject) => {
-            (trx ? trx(this.tableName) : knex(this.tableName))
-                .insert({...user})
-                .into(this.tableName)
-            .then(result => {
-                if(result.length > 0){
-                    user.id = result[0];
-                }
-                resolve(user);
-            })
-            .catch(error => {
-                reject(error);
-            });
-        });
-    }
+    // static save(user, trx = null){
+    //     return new Promise((resolve, reject) => {
+    //         (trx ? trx(this.tableName) : knex(this.tableName))
+    //             .insert({...user})
+    //             .into(this.tableName)
+    //         .then(result => {
+    //             if(result.length > 0){
+    //                 user.id = result[0];
+    //             }
+    //             resolve(user);
+    //         })
+    //         .catch(error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
     // static getById(id){
     //     return new Promise((resolve, reject) => {
@@ -72,19 +72,19 @@ class User extends ModelBase {
     // }
 
 
-    static getAll(trx = null){
-        return new Promise((resolve, reject) => {
-            (trx ? trx(this.tableName) : knex(this.tableName))
-                .select(... this.getFields())
-            .then(rows => {
-                const users = rows.map(row => new User(row.id, row.name, row.email, row.role, row.password));
-                resolve(users);
-            })
-            .catch(error => {
-                reject(error);
-            });
-        });
-    }
+    // static getAll(trx = null){
+    //     return new Promise((resolve, reject) => {
+    //         (trx ? trx(this.tableName) : knex(this.tableName))
+    //             .select(... this.getFields())
+    //         .then(rows => {
+    //             const users = rows.map(row => new User(row.id, row.name, row.email, row.role, row.password));
+    //             resolve(users);
+    //         })
+    //         .catch(error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
     static getByEmail(email){
         return new Promise((resolve, reject) => {
@@ -105,55 +105,55 @@ class User extends ModelBase {
         });
     }
 
-    static deleteById(id, trx = null){
-        console.log('delete user model');
-        return new Promise((resolve, reject) => {
-            (trx ? trx(this.tableName) : knex(this.tableName))
-                    .where({ id })
-                    .delete()
-            .then(result => {
-                resolve(result);
-            })
-            .catch(error => {
-                reject(error);
-            });
-        });
-    }
+    // static deleteById(id, trx = null){
+    //     console.log('delete user model');
+    //     return new Promise((resolve, reject) => {
+    //         (trx ? trx(this.tableName) : knex(this.tableName))
+    //                 .where({ id })
+    //                 .delete()
+    //         .then(result => {
+    //             resolve(result);
+    //         })
+    //         .catch(error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
-    static update(user){
-        return new Promise((resolve, reject) => {
-            console.log(user);
-            const u = {...user};
-            const {id, ...upd} = u;
-            console.log(upd);
-            knex(this.tableName)
-                .where({id: user.id})
-                .update(
-                    upd
-                )
-            .then(result => {
-                resolve(result);
-            })
-            .catch(error => {
-                reject(error);
-            })
-        });
-    }
+    // static update(user){
+    //     return new Promise((resolve, reject) => {
+    //         console.log(user);
+    //         const u = {...user};
+    //         const {id, ...upd} = u;
+    //         console.log(upd);
+    //         knex(this.tableName)
+    //             .where({id: user.id})
+    //             .update(
+    //                 upd
+    //             )
+    //         .then(result => {
+    //             resolve(result);
+    //         })
+    //         .catch(error => {
+    //             reject(error);
+    //         })
+    //     });
+    // }
 
-    static getBy(field, value, trx = null){
-        return new Promise((resolve, reject) => {
-            (trx ? trx(this.tableName) : knex(this.tableName))
-                .select(... this.getFields())
-                .whereIn(field, value)
-            .then(rows => {
-                const users = rows.map (row => new User(row.id, row.name, row.email, row.role, row.password) )
-                resolve(users);
-            })
-            .catch(error => {
-                reject(error);
-            });
-        });
-    }
+    // static getBy(field, value, trx = null){
+    //     return new Promise((resolve, reject) => {
+    //         (trx ? trx(this.tableName) : knex(this.tableName))
+    //             .select(... this.getFields())
+    //             .whereIn(field, value)
+    //         .then(rows => {
+    //             const users = rows.map (row => new User(row.id, row.name, row.email, row.role, row.password) )
+    //             resolve(users);
+    //         })
+    //         .catch(error => {
+    //             reject(error);
+    //         });
+    //     });
+    // }
 }
 
 module.exports = User;
