@@ -8,6 +8,10 @@ class ModelBase {
         return [];
     }
 
+    static builder(params){
+        return new ModelBase();
+    }
+
     static save(instance, trx = null){
         return new Promise((resolve, reject) => {
             (trx ? trx(this.tableName) : knex(this.tableName))
@@ -25,11 +29,11 @@ class ModelBase {
     static getById(id, trx = null){
         return new Promise((resolve, reject) => {
             (trx ? trx(this.tableName) : knex(this.tableName))
-                .select(this.fId, this.fName, this.fPrice, this.fStoreId)
+                .select(... this.getFields())
                 .where({id})
             .then(rows => {
                 if(rows.length > 0){
-                    resolve(new Product(rows[0].id, rows[0].name, rows[0].price, rows[0].storeId));
+                    resolve(this.builder(rows[0]));
                 }
                 else{
                     resolve(null);
@@ -40,19 +44,6 @@ class ModelBase {
             });
         });
     }
-
-    static getByIds(ids, trx = null ){
-        
-    }
-
-    static getBy(field, values, trx = null){
-
-    }
-
-    static getWhere(values, trx = null){
-
-    }
-
 }
 
 

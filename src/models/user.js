@@ -1,7 +1,8 @@
 const knex = require('../common/db');
-const { Store } = require('./store');
+const { ModelBase } = require('./modelbase');
 
-class User {
+
+class User extends ModelBase {
     static tableName = "users";
     static fId = "id";
     static fName = "name";
@@ -10,6 +11,7 @@ class User {
     static fRole = "role";
 
     constructor(id = null, name = null, email = null, role='USER', password = null){
+        super();
         this.id = id;
         this.name = name;
         this.email = email;
@@ -25,6 +27,10 @@ class User {
             this.fPassword,
             this.fRole
         ]
+    }
+
+    static builder(params){
+        return new User(params.id, params.name, params.email, params.role, params.password);
     }
 
     static save(user, trx = null){
@@ -44,26 +50,26 @@ class User {
         });
     }
 
-    static getById(id){
-        return new Promise((resolve, reject) => {
-            knex
-                .select(... this.getFields())
-                .from(this.tableName)
-                .where(this.fId, id)
-            .then(users => {
-                if(users.length > 0){
-                    resolve(new User(users[0].id, users[0].name, users[0].email, users[0].role, users[0].password));
-                }
-                else{
-                    resolve(null);
-                }
-            })
-            .catch(error => {
-                console.log("🚀 ~ file: user.js ~ line 64 ~ User ~ returnnewPromise ~ error", error)
-                reject(error);
-            });
-        });
-    }
+    // static getById(id){
+    //     return new Promise((resolve, reject) => {
+    //         knex
+    //             .select(... this.getFields())
+    //             .from(this.tableName)
+    //             .where(this.fId, id)
+    //         .then(users => {
+    //             if(users.length > 0){
+    //                 resolve(new User(users[0].id, users[0].name, users[0].email, users[0].role, users[0].password));
+    //             }
+    //             else{
+    //                 resolve(null);
+    //             }
+    //         })
+    //         .catch(error => {
+    //             console.log("🚀 ~ file: user.js ~ line 64 ~ User ~ returnnewPromise ~ error", error)
+    //             reject(error);
+    //         });
+    //     });
+    // }
 
 
     static getAll(trx = null){
